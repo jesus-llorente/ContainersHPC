@@ -1,0 +1,66 @@
+Bootstrap: docker
+From: python:3.11-slim
+
+%post
+pip install tensorflow==2.19.0 matplotlib==3.9.2
+mkdir -p /app/src /app/data
+
+cat > /app/src/compute.py << 'PYEOF'
+import csv, statistics
+import tensorflow as tf
+
+def load_data(path="data/sample.csv"):
+    with open(path) as f:
+        rows = list(csv.DictReader(f))
+    return [float(r["value"]) for r in rows]
+
+def summarize(values):
+    return {
+        "summary": "test data",
+        "n": len(values),
+        "mean": round(statistics.mean(values), 3),
+        "min": min(values),
+        "max": max(values),
+        "tensorflow": tf.__version__
+    }
+PYEOF
+
+cat > /app/src/plot.py << 'PYEOF'
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+def make_plot(values, output_path="output/plot.png"):
+    plt.figure()
+    plt.plot(values, marker="o")
+    plt.title("Sample values")
+    plt.savefig(output_path)
+PYEOF
+
+cat > /app/src/pipeline.py << 'PYEOF'
+import json, os
+from compute import load_data, summarize
+from plot import make_plot
+
+def main():
+    values = load_data()
+    print(json.dumps(summarize(values), indent=2))
+    os.makedirs("output", exist_ok=True)
+    make_plot(values)
+
+if __name__ == "__main__":
+    main()
+PYEOF
+
+cat > /app/data/sample.csv << 'CSVEOF'
+id,value
+1,4.2
+2,7.8
+3,3.1
+4,9.6
+5,5.5
+CSVEOF
+
+%runscript
+cd /app && python3 src/pipeline.py
+

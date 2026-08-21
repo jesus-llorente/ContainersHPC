@@ -1,0 +1,14 @@
+Bootstrap: docker
+From: python:3.11-slim
+
+%files
+	requirements.txt /app/requirements.txt
+	src/ /app/src/
+	data/sample.csv /app/data/sample.csv
+
+%post
+	pip install -r /app/requirements.txt
+
+%runscript
+	cd /app/src && python pipeline.py
+
