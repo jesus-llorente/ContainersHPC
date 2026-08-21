@@ -14,7 +14,7 @@ def main():
 
     # Compute summary and save json
     summary = {
-        "SUMMARY" : "TEST DATA"
+        "summary": "test data",
         "n": len(values),
         "mean": round(statistics.mean(values), 3),
         "min": min(values),
